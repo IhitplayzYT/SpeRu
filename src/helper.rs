@@ -3,7 +3,95 @@ pub mod Helper{
     use std::{path::Path, vec};
 
 
-pub const DBG_STR:&str = "";
+pub const DBG_STR:&str = "SpeRu - Spell Recognition & Runtime Utility
+
+USAGE: ./SpeRu [OPTIONS] [PID]
+
+DESCRIPTION:
+SpeRu provides spell correction, word prediction, dictionary learning,
+and process-attached text analysis.
+
+OPTIONS:
+-h, --help
+Display this help message and exit.
+
+-d, --debug
+    Enable verbose debug output.
+
+-o, --optimise
+    Enable optimisation mode.
+    May trade startup cost for improved runtime performance.
+
+-l, --learn
+    Enable learning mode.
+    Learned words and corrections may be persisted for future use.
+
+-p=<PID>
+    Attach SpeRu to the specified process ID.
+
+    Example:
+        -p=1234
+
+<PID>
+    A numeric PID may also be supplied directly without -p.
+
+    Example:
+        SpeRu 1234
+
+-d=<FILE>
+-dir=<FILE>
+-idir=<FILE>
+    Load a dictionary file.
+
+    May be specified multiple times.
+
+    Examples:
+        -d=/usr/share/dict/words
+        -dir=./custom.dict
+        -idir=/opt/dictionaries/medical.dict
+
+
+EXAMPLES:
+
+Display help:
+    SpeRu --help
+
+Attach to process:
+    SpeRu -p=4242
+
+Attach using positional PID:
+    SpeRu 4242
+
+Enable debug mode:
+    SpeRu --debug 4242
+
+Enable learning mode:
+    SpeRu --learn
+
+Load a custom dictionary:
+    SpeRu -d=english.dict
+
+Load multiple dictionaries:
+    SpeRu \
+        -d=english.dict \
+        -d=technical.dict \
+        -d=medical.dict
+
+Optimised learning session:
+    SpeRu \
+        --optimise \
+        --learn \
+        -d=english.dict \
+        -p=4242
+
+
+EXIT STATUS:
+0   Success
+1   Invalid arguments or runtime failure
+
+AUTHOR: Ihit Acharya
+SpeRu Project
+";
 pub const OK: i32 = 0;
 pub const ERR: i32 = 1;
 // Just a spce seperated or new line based custom file from which we'll extract our vocabulary
