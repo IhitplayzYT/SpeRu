@@ -2,11 +2,14 @@
 
 mod helper;
 mod speru;
+mod read;
 
 use std::path::Path;
+use std::fs::File;
+use std::io::Read;
 use speru::Speru;
 use helper::Helper;
-fn main() {
+fn main() -> std::io::Result<()>{
 let clargs = Helper::Parse_args();
 let mut wordlist = vec![];
 if clargs.dbg {
@@ -27,9 +30,22 @@ if clargs.optimise{
 }
 
 if let Some(pid) = clargs.proc_id {
+    // Add the pid attach code here     
 
+
+    Ok(())
 }else{
- // some dep lets us take direct eventx input do that instead of attaching to a pid's  fd/0
+    let mut tty = File::open("/dev/pts/5")?;
+    let mut buf = [0u8; 4096];
+    loop {
+        let n = tty.read(&mut buf)?;
+        if n > 0 {
+            let s = String::from_utf8_lossy(&buf[..n]);
+            
+            // do the autcorrect over here 
+
+        }
+    }
 }
 
 }

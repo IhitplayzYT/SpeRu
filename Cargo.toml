@@ -9,3 +9,4 @@ license-file = "LICENSE"
 [dependencies]
 once_cell = "1.21.4"
 rand = "0.9"
+evdev = "0.13"
