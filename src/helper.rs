@@ -122,7 +122,7 @@ SpeRu Project
 ";
 pub const OK: i32 = 0;
 pub const ERR: i32 = 1;
-// Just a spce seperated or new line based custom file from which we'll extract our vocabulary
+// Just a space seperated or new line based custom file from which we'll extract our vocabulary
 const DEFAULT_DICTIONARY: &str = "dictionary/en-dict.dict";
 
 pub fn Help(){
@@ -180,11 +180,10 @@ if fpath.is_dir() {
     for i in  std::fs::read_dir(&fpath).unwrap().flatten(){
         ret.append(&mut extract_vocab(&i.path(),retain));
     }
-}else if fpath.ends_with(".dict") || fpath.ends_with(".txt") {
+}else if matches!(fpath.extension().and_then(|s| s.to_str()),Some("dict" | "txt")) {
     let bytes = std::fs::read(fpath).unwrap_or_else(|_| { std::process::exit(ERR)});
     let file = String::from_utf8(bytes).unwrap();
     ret.append(&mut String::from_utf8(file.bytes().map(|ch| if ch == b'\n' {b' '} else {ch}).collect::<Vec<u8>>()).unwrap().split_ascii_whitespace().into_iter().map(|x| {if !retain{x.to_lowercase().to_string()} else {x.to_string()}}).collect::<Vec<String>>());
-
 }
     ret
 }
@@ -217,8 +216,8 @@ let args = std::env::args().collect::<Vec<String>>();
             if let Some(lb) = i.find("["){
                 let rb = i[lb..].find("]").unwrap();
                 let name = &i[..lb];
-                let pl = i[lb+1..rb].trim();
-
+                let pl = i[lb+1..lb+rb].trim();
+                println!("name={name:?} pl={pl:?}");
             /*
             pub enum Metric {
             Levenshtein(usize),
@@ -242,11 +241,13 @@ let args = std::env::args().collect::<Vec<String>>();
                     "hamming" | "ham" => {ret.metric = Metric::Hamming(pl.parse::<usize>().expect("Hamming expects only one parameter the dist range.Eg: Hamming[5]"));},
                     "qgram" | "qg" => {
                         let (p1,p2) =  pl.split_at(pl.find(",").expect("Qgram expects two parameters the dist range and the degree.Eg: Qgram[5,3] -> Initialises a triagram distance approach"));
+                        let p2 = &p2[1..];
                         ret.metric = Metric::Qgram(p1.parse::<usize>().expect("Dist range in a unsigned integer"),p2.parse::<usize>().expect("Degree in a unsigned integer"));
                     } ,
                     "lcs" =>  {ret.metric = Metric::Lcs(pl.parse::<usize>().expect("Lcs expects only one parameter the dist range.Eg: Lcs[5]"));},
                     "doublemetaphone" | "d_meta" => {
                         let (p1,p2) =  pl.split_at(pl.find(",").expect("DoubleMetaphone expects two parameters the dist range and the Aggregating Metric.Eg: DoubleMetaphone[5,AVG] -> Initialises a DoubleMetaphone that averages out primary and secondary phonetic cross product"));
+                        let p2 =&p2[1..];
                         ret.metric = Metric::DoubleMetaphone(p1.parse::<usize>().expect("Dist range in a unsigned integer"),match &p2.trim().to_lowercase()[..]{
                             "avg" | "average" => DMeta::AVG,
                             "min" | "minimum" => DMeta::MIN,

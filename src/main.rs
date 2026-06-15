@@ -7,9 +7,9 @@ mod tree;
 mod dist;
 
 use std::path::Path;
-use std::fs::File;
-use std::io::Read;
 use speru::Speru;
+use read::Read::key_to_char;
+use evdev::{Device, EventSummary, KeyCode};
 use helper::Helper;
 
 use crate::tree::Tree;
@@ -23,33 +23,100 @@ if clargs.dbg {
 for i in &clargs.dict_file {
     wordlist.append(&mut Helper::extract_vocab(Path::new(i),clargs.retain_capitalise));
 }
+if clargs.dbg {println!("{wordlist:?}");}
 
 if clargs.optimise{
     wordlist.iter().for_each(|x| if !Speru::set_word(x) {std::process::exit(Helper::ERR)});
     let id_list = Speru::Id2Str_Map.read().unwrap().clone().into_keys().collect::<Vec<usize>>();
     let root = Tree::O_BK_Tree::from_vec(id_list); 
-}else{
-    wordlist.iter().for_each(|x| if !Speru::set_word(x) {std::process::exit(Helper::ERR)});
-    let root = Tree::BK_Tree::from_vec(wordlist); 
-}
-
 if let Some(pid) = clargs.proc_id {
     // Add the pid attach code here     
 
 
     Ok(())
 }else{
-    let mut tty = File::open("/dev/pts/5")?;
-    let mut buf = [0u8; 4096];
+let mut dev = Device::open("/dev/input/event4")?;
+    let mut current_word = String::new();
+    let mut shift = false;
     loop {
-        let n = tty.read(&mut buf)?;
-        if n > 0 {
-            let s = String::from_utf8_lossy(&buf[..n]);
-            
-            // do the autcorrect over here 
-
+        for event in dev.fetch_events()? {
+            if let EventSummary::Key(_, key, value) = event.destructure() {
+                if value == 0 {
+                    continue;
+                }
+                match key {
+                    KeyCode::KEY_LEFTSHIFT | KeyCode::KEY_RIGHTSHIFT => {
+                        shift = true;
+                    }
+                    KeyCode::KEY_BACKSPACE => {
+                        current_word.pop();
+                    }
+                    KeyCode::KEY_SPACE | KeyCode::KEY_ENTER => {
+                        if !current_word.is_empty() {
+                            println!("Completed word: {}", current_word);
+                            println!("{:?}",root.get_n_strs(&current_word));
+                            current_word.clear();
+                        }
+                    }
+                    _ => {
+                        if let Some(c) = key_to_char(key, shift) {
+                            current_word.push(c);
+                            println!("Current word = {}", current_word);
+                        }
+                    }
+                }
+            }
         }
     }
 }
+}else{
+    wordlist.iter().for_each(|x| if !Speru::set_word(x) {std::process::exit(Helper::ERR)});
+    let root = Tree::BK_Tree::from_vec(wordlist); 
+if let Some(pid) = clargs.proc_id {
+    // Add the pid attach code here     
+
+
+    Ok(())
+}else{
+    let mut dev = Device::open("/dev/input/event4")?;
+    
+    let mut current_word = String::new();
+    let mut shift = false;
+    loop {
+
+        for event in dev.fetch_events()? {
+            if let EventSummary::Key(_, key, value) = event.destructure() {
+                if value == 0 {
+                    continue;
+                }
+                match key {
+                    KeyCode::KEY_LEFTSHIFT | KeyCode::KEY_RIGHTSHIFT => {
+                        shift = true;
+                    }
+                    KeyCode::KEY_BACKSPACE => {
+                        current_word.pop();
+                    }
+                    KeyCode::KEY_SPACE | KeyCode::KEY_ENTER => {
+                        if !current_word.is_empty() {
+                            println!("Completed word: {}", current_word);
+                            println!("{:?}",root.get_n_strs(&current_word));
+                            current_word.clear();
+                        }
+                    }
+                    _ => {
+                        if let Some(c) = key_to_char(key, shift) {
+                            current_word.push(c);
+                            println!("Current word = {}", current_word);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+}
+
+
 
 }
